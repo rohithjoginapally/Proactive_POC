@@ -44,14 +44,6 @@ searchInput.addEventListener('input', function() {
         .then(response => response.json())
         .then(products => {
           updateProductsDisplay(products);
-          // Trigger bot after 5 seconds if searching for laptops
-          if (query.toLowerCase().includes('laptop')) {
-            setTimeout(() => {
-              if (window.koreWebSDK) {
-                window.koreWebSDK.triggerProactiveMessage("If you're looking for laptops, I can help you with it!");
-              }
-            }, 5000);
-          }
         });
     } else {
       // Reset to original products if search is empty
