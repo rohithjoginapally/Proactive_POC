@@ -70,7 +70,32 @@ function requireAuth(req,res,next){
 }
 
 app.get('/home', requireAuth, (req,res)=> res.render('home', {title:'Home'}));
-app.get('/products', requireAuth, (req,res)=> res.render('products', {title:'Products', products}));
+app.get('/products', requireAuth, (req, res) => {
+  const searchQuery = req.query.search || '';
+  const category = req.query.category || 'all';
+  
+  let filteredProducts = products;
+  
+  if (searchQuery) {
+    filteredProducts = products.filter(product => 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      product.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+  
+  if (category && category !== 'all') {
+    filteredProducts = filteredProducts.filter(product => 
+      product.category.toLowerCase() === category.toLowerCase()
+    );
+  }
+  
+  res.render('products', {
+    title: 'Products',
+    products: filteredProducts,
+    searchQuery: searchQuery,
+    category: category
+  });
+});
 app.post('/add-to-cart', requireAuth, (req,res)=>{
   const id = parseInt(req.body.id,10);
   const product = products.find(p=>p.id===id);
@@ -86,10 +111,23 @@ app.get('/cart', requireAuth, (req,res)=> res.render('cart',{title:'Cart', cart:
 // Add search endpoint
 app.get('/search', requireAuth, (req, res) => {
   const query = req.query.q?.toLowerCase() || '';
-  const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(query) || 
-    product.category.toLowerCase().includes(query)
-  );
+  const category = req.query.category?.toLowerCase();
+  
+  let filteredProducts = products;
+  
+  if (query) {
+    filteredProducts = products.filter(product => 
+      product.name.toLowerCase().includes(query) || 
+      product.category.toLowerCase().includes(query)
+    );
+  }
+  
+  if (category && category !== 'all') {
+    filteredProducts = filteredProducts.filter(product => 
+      product.category.toLowerCase() === category
+    );
+  }
+  
   res.json(filteredProducts);
 });
 

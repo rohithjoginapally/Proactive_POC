@@ -4,9 +4,19 @@
   <div class="row mb-4">
     <div class="col-md-6">
       <div class="input-group">
-        <input type="text" id="searchInput" class="form-control" placeholder="Search products...">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search products..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
         <button class="btn btn-primary" type="button" id="searchButton">Search</button>
       </div>
+    </div>
+    <div class="col-md-6">
+      <select class="form-select" id="categoryFilter">
+        <option value="all" <%= (typeof category !== 'undefined' && category === 'all') ? 'selected' : '' %>>All Categories</option>
+        <option value="computers" <%= (typeof category !== 'undefined' && category === 'computers') ? 'selected' : '' %>>Computers</option>
+        <option value="accessories" <%= (typeof category !== 'undefined' && category === 'accessories') ? 'selected' : '' %>>Accessories</option>
+        <option value="audio" <%= (typeof category !== 'undefined' && category === 'audio') ? 'selected' : '' %>>Audio</option>
+        <option value="wearables" <%= (typeof category !== 'undefined' && category === 'wearables') ? 'selected' : '' %>>Wearables</option>
+        <option value="tablets" <%= (typeof category !== 'undefined' && category === 'tablets') ? 'selected' : '' %>>Tablets</option>
+      </select>
     </div>
   </div>
 
@@ -33,24 +43,53 @@
 <script>
 let searchTimeout;
 const searchInput = document.getElementById('searchInput');
+const categoryFilter = document.getElementById('categoryFilter');
 const productsContainer = document.getElementById('productsContainer');
+
+// Function to update URL with search parameters
+function updateSearchURL(query, category) {
+  const url = new URL(window.location.href);
+  if (query) {
+    url.searchParams.set('search', query);
+  } else {
+    url.searchParams.delete('search');
+  }
+  if (category && category !== 'all') {
+    url.searchParams.set('category', category);
+  } else {
+    url.searchParams.delete('category');
+  }
+  window.history.pushState({}, '', url);
+}
+
+// Function to perform search
+function performSearch() {
+  const query = searchInput.value.trim();
+  const category = categoryFilter.value;
+  
+  if (query || category !== 'all') {
+    fetch(`/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}`)
+      .then(response => response.json())
+      .then(products => {
+        updateProductsDisplay(products);
+        updateSearchURL(query, category);
+      });
+  } else {
+    // Reset to original products if search is empty and category is all
+    const url = new URL(window.location.href);
+    url.searchParams.delete('search');
+    url.searchParams.delete('category');
+    window.history.pushState({}, '', url);
+    location.reload();
+  }
+}
 
 searchInput.addEventListener('input', function() {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    const query = this.value.trim();
-    if (query) {
-      fetch(`/search?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(products => {
-          updateProductsDisplay(products);
-        });
-    } else {
-      // Reset to original products if search is empty
-      location.reload();
-    }
-  }, 300);
+  searchTimeout = setTimeout(performSearch, 300);
 });
+
+categoryFilter.addEventListener('change', performSearch);
 
 function updateProductsDisplay(products) {
   productsContainer.innerHTML = products.map(product => `
