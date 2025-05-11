@@ -1,14 +1,83 @@
-<h2>Products</h2>
-<div class="product-grid">
-  <% products.forEach(p => { %>
-    <div class="product-card">
-      <img src="<%= p.image %>" alt="<%= p.name %>">
-      <h3><%= p.name %></h3>
-      <p class="price">$<%= p.price %></p>
-      <form method="POST" action="/add-to-cart">
-        <input type="hidden" name="id" value="<%= p.id %>">
-        <button type="submit">Add to Cart</button>
-      </form>
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search products...">
+        <button class="btn btn-primary" type="button" id="searchButton">Search</button>
+      </div>
     </div>
-  <% }) %>
+  </div>
+
+  <div class="row" id="productsContainer">
+    <% products.forEach(product => { %>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <img src="<%= product.image %>" class="card-img-top" alt="<%= product.name %>" style="height: 200px; object-fit: contain;">
+          <div class="card-body">
+            <h5 class="card-title"><%= product.name %></h5>
+            <p class="card-text">Category: <%= product.category %></p>
+            <p class="card-text">Price: $<%= product.price %></p>
+            <form action="/add-to-cart" method="POST">
+              <input type="hidden" name="id" value="<%= product.id %>">
+              <button type="submit" class="btn btn-primary">Add to Cart</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  </div>
 </div>
+
+<script>
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const productsContainer = document.getElementById('productsContainer');
+
+searchInput.addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    const query = this.value.trim();
+    if (query) {
+      fetch(`/search?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(products => {
+          updateProductsDisplay(products);
+          // Trigger bot after 5 seconds if searching for laptops
+          if (query.toLowerCase().includes('laptop')) {
+            setTimeout(() => {
+              if (window.koreWebSDK) {
+                window.koreWebSDK.triggerProactiveMessage("If you're looking for laptops, I can help you with it!");
+              }
+            }, 5000);
+          }
+        });
+    } else {
+      // Reset to original products if search is empty
+      location.reload();
+    }
+  }, 300);
+});
+
+function updateProductsDisplay(products) {
+  productsContainer.innerHTML = products.map(product => `
+    <div class="col-md-4 mb-4">
+      <div class="card h-100">
+        <img src="${product.image}" class="card-img-top" alt="${product.name}" style="height: 200px; object-fit: contain;">
+        <div class="card-body">
+          <h5 class="card-title">${product.name}</h5>
+          <p class="card-text">Category: ${product.category}</p>
+          <p class="card-text">Price: $${product.price}</p>
+          <form action="/add-to-cart" method="POST">
+            <input type="hidden" name="id" value="${product.id}">
+            <button type="submit" class="btn btn-primary">Add to Cart</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+</script>
+
+<%- include('partials/footer') %>

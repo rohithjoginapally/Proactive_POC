@@ -7,6 +7,13 @@ const expressLayouts = require('express-ejs-layouts');
 const app = express();
 const PORT = process.env.PORT || 4001;
 
+// Valid users
+const validUsers = [
+  { email: 'gopim@pronixinc.com', password: 'Admin@1234' },
+  { email: 'rohithj@pronixinc.com', password: 'Admin@123' },
+  { email: 'shivaniv@pronixinc.com', password: 'Admin@123' }
+];
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
@@ -16,14 +23,18 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({ secret:'retailbot-secret', resave:false, saveUninitialized:false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Dummy products
+// Enhanced products list
 const products = [
-  {id:1,name:'Wireless Mouse',price:25,image:'https://resource.logitechg.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/products/G309-Lightspeed-Gaming-Mouse/gallery/g309-lightspeed-wireless-mouse-white-gallery-1.png?v=1'},
-  {id:2,name:'Bluetooth Headphones',price:599,image:'https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcSridjkVi2_eUfQC2ivC3zWuZHTYVrJpy3PIxLPdiOAT8NS47JX7aXIU2MnS-42Ld69xXuVNSAwzTrYSeOzZ-D5CBioIuq4gGoXMJDNW33HbT0eWA8KKNzS7tlN_Qompguqeb4R8ps&usqp=CAc'},
-  {id:3,name:'Smartwatch',price:120,image:'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRSDU12k7qj2DrRVEq8El7mIZCFmk7jj7MC8jvIEpZPbLSgZ_3FyULx4KNgdTpjAFzOcsjxDKyWEUDqjKgaTo7XwhI3b4HGxxN9Sv4DK4mH1FzSOJFm7UItQYtXDl-uIqgpTiI1_JEba3I&usqp=CAc'},
-  {id:4,name:'USB-C Cable',price:10,image:'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcSon5zPrYmTRmF1KzCunSNaBuyrmCb6Wvy4JMe5zUGS5f5yE_ZIX_5W5ieKxjZz_wNt0xCjkuGwJ15xom2_KB1XVm0bcX_0zWPuCahMVI33MlTO05RCMV3JUlO9bHoU2mg2gqEz0w&usqp=CAc'},
-  {id:5,name:'Gaming Keyboard',price:80,image:'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQmPRaM61RCTBDI35C2mTNwHJcjipVHaVIYx9NoxoilVlfr1S2Zg5etD5pemPc1asixuxFCoYzXqns2trwR3rKz9Z628rs53Yu1EZIAxg&usqp=CAc'},
-  {id:6,name:'Power Bank',price:35,image:'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcSNPwxH-DYdzuSdRuv78vFQb6OkkOGcfK9p63MvNxwjqAGXx8OzamXzUmGdmqAjnd4fbUfuuBb1OAjRHpXxnK0WjJclJw7qaj96WqESYNxNoJvVKwj5zKs3vJ53ELHsZtUmk-Fyljw&usqp=CAc'}
+  {id:1, name:'Wireless Mouse', price:25, category:'Accessories', image:'https://resource.logitechg.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/products/G309-Lightspeed-Gaming-Mouse/gallery/g309-lightspeed-wireless-mouse-white-gallery-1.png?v=1'},
+  {id:2, name:'Bluetooth Headphones', price:599, category:'Audio', image:'https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcSridjkVi2_eUfQC2ivC3zWuZHTYVrJpy3PIxLPdiOAT8NS47JX7aXIU2MnS-42Ld69xXuVNSAwzTrYSeOzZ-D5CBioIuq4gGoXMJDNW33HbT0eWA8KKNzS7tlN_Qompguqeb4R8ps&usqp=CAc'},
+  {id:3, name:'Smartwatch', price:120, category:'Wearables', image:'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRSDU12k7qj2DrRVEq8El7mIZCFmk7jj7MC8jvIEpZPbLSgZ_3FyULx4KNgdTpjAFzOcsjxDKyWEUDqjKgaTo7XwhI3b4HGxxN9Sv4DK4mH1FzSOJFm7UItQYtXDl-uIqgpTiI1_JEba3I&usqp=CAc'},
+  {id:4, name:'USB-C Cable', price:10, category:'Accessories', image:'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcSon5zPrYmTRmF1KzCunSNaBuyrmCb6Wvy4JMe5zUGS5f5yE_ZIX_5W5ieKxjZz_wNt0xCjkuGwJ15xom2_KB1XVm0bcX_0zWPuCahMVI33MlTO05RCMV3JUlO9bHoU2mg2gqEz0w&usqp=CAc'},
+  {id:5, name:'Gaming Keyboard', price:80, category:'Gaming', image:'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQmPRaM61RCTBDI35C2mTNwHJcjipVHaVIYx9NoxoilVlfr1S2Zg5etD5pemPc1asixuxFCoYzXqns2trwR3rKz9Z628rs53Yu1EZIAxg&usqp=CAc'},
+  {id:6, name:'Power Bank', price:35, category:'Accessories', image:'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcSNPwxH-DYdzuSdRuv78vFQb6OkkOGcfK9p63MvNxwjqAGXx8OzamXzUmGdmqAjnd4fbUfuuBb1OAjRHpXxnK0WjJclJw7qaj96WqESYNxNoJvVKwj5zKs3vJ53ELHsZtUmk-Fyljw&usqp=CAc'},
+  {id:7, name:'MacBook Pro', price:1299, category:'Laptops', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mbp14-spacegray-select-202301?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1671304673202'},
+  {id:8, name:'Dell XPS 13', price:999, category:'Laptops', image:'https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/xps-notebooks/xps-13-9315/media-gallery/black/laptop-xps-9315-t-black-gallery-1.psd?fmt=png-alpha&pscan=auto&scl=1&hei=402&wid=402&qlt=100,1&resMode=sharp2&size=402,402&chrss=full'},
+  {id:9, name:'Sony WH-1000XM4', price:349, category:'Audio', image:'https://www.sony.com/image/5d02da5df552836db894a0a0d4a5c0c0?fmt=pjpeg&bgcolor=FFFFFF&bgc=FFFFFF&wid=2515&hei=1320'},
+  {id:10, name:'iPad Pro', price:799, category:'Tablets', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-pro-model-select-gallery-2-202212?wid=5120&hei=2880&fmt=p-jpg&qlt=95&.v=1667591164218'}
 ];
 
 // Middleware to pass login/cart info to all views
@@ -39,12 +50,14 @@ app.get('/', (req,res)=> res.redirect('/login'));
 app.get('/login', (req,res)=> res.render('login', { title:'Login' }));
 
 app.post('/login', (req,res)=>{
-  const {email,password} = req.body;
-  if(email==='gopim@pronixinc.com' && password==='Admin@1234'){
+  const {email, password} = req.body;
+  const user = validUsers.find(u => u.email === email && u.password === password);
+  
+  if(user){
     req.session.email = email;
     req.session.cart = [];
     res.redirect('/home');
-  }else{
+  } else {
     res.send('<h2>Invalid credentials</h2><a href="/login">Try again</a>');
   }
 });
@@ -69,5 +82,15 @@ app.post('/add-to-cart', requireAuth, (req,res)=>{
   res.redirect('/cart');
 });
 app.get('/cart', requireAuth, (req,res)=> res.render('cart',{title:'Cart', cart:req.session.cart || []}));
+
+// Add search endpoint
+app.get('/search', requireAuth, (req, res) => {
+  const query = req.query.q?.toLowerCase() || '';
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(query) || 
+    product.category.toLowerCase().includes(query)
+  );
+  res.json(filteredProducts);
+});
 
 app.listen(PORT, ()=>console.log('RetailBot running on port '+PORT));
