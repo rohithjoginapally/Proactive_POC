@@ -39,18 +39,18 @@ if (typeof AgentDesktopPlugin !== 'function') {
   chatWindowInstance.installPlugin(new AgentDesktopPlugin());
 }
 
-// /* Proactive Web Campaign depends on Agent‑Desktop */
-// const ProactiveWebCampaignPlugin =
-//         window.ProactiveWebCampaignPlugin ??
-//         (window.ProactiveWebCampaignPluginSDK &&
-//          window.ProactiveWebCampaignPluginSDK.ProactiveWebCampaignPlugin);
+/* Proactive Web Campaign depends on Agent‑Desktop */
+const ProactiveWebCampaignPlugin =
+        window.ProactiveWebCampaignPlugin ??
+        (window.ProactiveWebCampaignPluginSDK &&
+         window.ProactiveWebCampaignPluginSDK.ProactiveWebCampaignPlugin);
 
-// if (ProactiveWebCampaignPlugin) {
-//   console.log(window.ProactiveWebCampaignPlugin);
-//   chatWindowInstance.installPlugin(
-//       new ProactiveWebCampaignPlugin({ dependentPlugins: { AgentDesktopPlugin: true }})
-//   );
-// }
+if (ProactiveWebCampaignPlugin) {
+  console.log(window.ProactiveWebCampaignPlugin);
+  chatWindowInstance.installPlugin(
+      new ProactiveWebCampaignPlugin({ dependentPlugins: { AgentDesktopPlugin: true }})
+  );
+}
 
 KoreChatSDK.chatConfig.botOptions.botInfo.customData = { language: "french" };
 chatConfig.i18n = { defaultLanguage: "fr" };
