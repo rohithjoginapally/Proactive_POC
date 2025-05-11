@@ -1,0 +1,112 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search computers..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+        <button class="btn btn-primary" type="button" id="searchButton">Search</button>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <select class="form-select" id="brandFilter">
+        <option value="all" <%= (typeof brand !== 'undefined' && brand === 'all') ? 'selected' : '' %>>All Brands</option>
+        <option value="apple" <%= (typeof brand !== 'undefined' && brand === 'apple') ? 'selected' : '' %>>Apple</option>
+        <option value="dell" <%= (typeof brand !== 'undefined' && brand === 'dell') ? 'selected' : '' %>>Dell</option>
+        <option value="hp" <%= (typeof brand !== 'undefined' && brand === 'hp') ? 'selected' : '' %>>HP</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row" id="productsContainer">
+    <% products.forEach(product => { %>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <img src="<%= product.image %>" class="card-img-top" alt="<%= product.name %>" style="height: 200px; object-fit: contain;">
+          <div class="card-body">
+            <h5 class="card-title"><%= product.name %></h5>
+            <p class="card-text">Brand: <%= product.brand %></p>
+            <p class="card-text">Price: $<%= product.price %></p>
+            <form action="/add-to-cart" method="POST">
+              <input type="hidden" name="id" value="<%= product.id %>">
+              <button type="submit" class="btn btn-primary">Add to Cart</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+</div>
+
+<script>
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const brandFilter = document.getElementById('brandFilter');
+const productsContainer = document.getElementById('productsContainer');
+
+// Function to update URL with search parameters
+function updateSearchURL(query, brand) {
+  const url = new URL(window.location.href);
+  if (query) {
+    url.searchParams.set('search', query);
+  } else {
+    url.searchParams.delete('search');
+  }
+  if (brand && brand !== 'all') {
+    url.searchParams.set('brand', brand);
+  } else {
+    url.searchParams.delete('brand');
+  }
+  window.history.pushState({}, '', url);
+}
+
+// Function to perform search
+function performSearch() {
+  const query = searchInput.value.trim();
+  const brand = brandFilter.value;
+  
+  if (query || brand !== 'all') {
+    fetch(`/computers/search?q=${encodeURIComponent(query)}&brand=${encodeURIComponent(brand)}`)
+      .then(response => response.json())
+      .then(products => {
+        updateProductsDisplay(products);
+        updateSearchURL(query, brand);
+      });
+  } else {
+    // Reset to original products if search is empty and brand is all
+    const url = new URL(window.location.href);
+    url.searchParams.delete('search');
+    url.searchParams.delete('brand');
+    window.history.pushState({}, '', url);
+    location.reload();
+  }
+}
+
+searchInput.addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(performSearch, 300);
+});
+
+brandFilter.addEventListener('change', performSearch);
+
+function updateProductsDisplay(products) {
+  productsContainer.innerHTML = products.map(product => `
+    <div class="col-md-4 mb-4">
+      <div class="card h-100">
+        <img src="${product.image}" class="card-img-top" alt="${product.name}" style="height: 200px; object-fit: contain;">
+        <div class="card-body">
+          <h5 class="card-title">${product.name}</h5>
+          <p class="card-text">Brand: ${product.brand}</p>
+          <p class="card-text">Price: $${product.price}</p>
+          <form action="/add-to-cart" method="POST">
+            <input type="hidden" name="id" value="${product.id}">
+            <button type="submit" class="btn btn-primary">Add to Cart</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+</script>
+
+<%- include('partials/footer') %> 
