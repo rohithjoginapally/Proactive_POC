@@ -1,0 +1,17 @@
+<h2>Your Cart</h2>
+<% if(cart.length === 0){ %>
+<p>Your cart is empty.</p>
+<% } else { %>
+<table>
+  <tr><th>Product</th><th>Quantity</th><th>Price</th><th>Subtotal</th></tr>
+  <% let total = 0; cart.forEach(item => { const subtotal = item.qty * item.price; total += subtotal; %>
+    <tr>
+      <td><%= item.name %></td>
+      <td><%= item.qty %></td>
+      <td>$<%= item.price %></td>
+      <td>$<%= subtotal.toFixed(2) %></td>
+    </tr>
+  <% }) %>
+  <tr><td colspan="3" style="text-align:right"><strong>Total</strong></td><td>$<%= total.toFixed(2) %></td></tr>
+</table>
+<% } %>
